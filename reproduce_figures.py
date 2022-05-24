@@ -71,5 +71,5 @@ def reproduce_figure_3():
 
 
 reproduce_figure_1()
-reproduce_figure_2()
-reproduce_figure_3()
+# reproduce_figure_2()
+# reproduce_figure_3()
