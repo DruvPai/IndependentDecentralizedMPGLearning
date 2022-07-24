@@ -66,15 +66,15 @@ def independent_decentralized_algo(game: StochasticGame, K: int,
             nu_i = sum(xlogx(pi[i][(s_k, a_i)]) for a_i in A[i])
             new_q_tilde[i][(s_k, a_k[i])] = q_tilde[i][(s_k, a_k[i])] + alpha(N_tilde[i][(s_k, a_k[i])]) * (
                 R.get_reward(i, s_k, a_k) - (tau * nu_i)
-                + delta * sum(pi[i][(s_k, a_i)] * q_tilde[i][(s_k, a_i)] for a_i in A[i])
+                + delta * sum(pi[i][(s_k_plus_1, a_i)] * q_tilde[i][(s_k_plus_1, a_i)] for a_i in A[i])
                 - q_tilde[i][(s_k, a_k[i])]
             )
             # update pi_i
-            max_q_tilde = max(new_q_tilde[i][(s_k, a_i)] for a_i in A[i])
-            softmax_denom = sum(math.exp((new_q_tilde[i][(s_k, a_i)] - max_q_tilde) / tau) for a_i in A[i])
+            max_q_tilde = max(q_tilde[i][(s_k, a_i)] for a_i in A[i])
+            softmax_denom = sum(math.exp((q_tilde[i][(s_k, a_i)] - max_q_tilde) / tau) for a_i in A[i])
             for a_i in A[i]:
                 new_pi[i][(s_k, a_i)] = pi[i][(s_k, a_i)] + beta(N[s_k]) * (
-                    (math.exp((new_q_tilde[i][(s_k, a_i)] - max_q_tilde) / tau) / softmax_denom)
+                    (math.exp((q_tilde[i][(s_k, a_i)] - max_q_tilde) / tau) / softmax_denom)
                     - pi[i][(s_k, a_i)]
                 )
 
@@ -85,8 +85,8 @@ def independent_decentralized_algo(game: StochasticGame, K: int,
         a_history.append(a_k)
 
         # update sigma, pi, Q
-        pi = new_pi
-        q_tilde = new_q_tilde
+        pi = copy.deepcopy(new_pi)
+        q_tilde = copy.deepcopy(new_q_tilde)
 
         # transition to next state
         s_k = s_k_plus_1
