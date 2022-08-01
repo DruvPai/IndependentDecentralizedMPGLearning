@@ -17,10 +17,11 @@ plt.rcParams.update({
     "font.sans-serif": ["Times"]
 })
 LARGE_FONTDICT = {"fontsize": 26}
+PLOT_SPACING = 1000
 
 
-def plot_on_time_logscale(quantities: typing.Dict[str, typing.Tuple[typing.List[numbers.Number]]],
-                          title: str, xlabel: str, file: pathlib.Path, include_yticks=False, include_legend=False):
+def plot_on_time_logscale(quantities: typing.Dict[str, typing.Tuple[typing.List[numbers.Number]]], title: str,
+                          xlabel: str, file: pathlib.Path, include_yticks=False, include_legend=False):
     plt.title(title, fontdict=LARGE_FONTDICT)
     if not include_yticks:
         plt.yticks([0])
@@ -28,7 +29,11 @@ def plot_on_time_logscale(quantities: typing.Dict[str, typing.Tuple[typing.List[
     plt.xscale("log")
     plt.xlabel(xlabel, fontdict=LARGE_FONTDICT)
     for (idx, entry) in enumerate(quantities):
-        plt.plot(quantities[entry][0], quantities[entry][1], label=entry, color=f"C{idx}")
+        plt.plot(
+            quantities[entry][0],
+            quantities[entry][1],
+            label=entry, color=f"C{idx}"
+        )
     if include_legend:
         plt.legend()
     plt.savefig(file)
@@ -45,7 +50,7 @@ def plot_policy_convergence_l1(game: StochasticGame, pi_history: typing.List[Joi
         l1_distances_i = []
         times_i = []
         pi_i_K = pi_history[-1][i]
-        for k in range(K):
+        for k in range(0, K, K // PLOT_SPACING):
             pi_i_k = pi_history[k][i]
             l1_distance = sum(abs(pi_i_k[(s, a_i)] - pi_i_K[(s, a_i)]) for s in S for a_i in A[i])
             times_i.append(k)
@@ -68,7 +73,7 @@ def plot_local_Q_convergence_l1(game: StochasticGame, q_tilde_history: typing.Li
         l1_distances_i = []
         times_i = []
         q_tilde_i_K = q_tilde_history[-1][i]
-        for k in range(K):
+        for k in range(0, K, K // PLOT_SPACING):
             q_tilde_i_k = q_tilde_history[k][i]
             l1_distance = sum(abs(q_tilde_i_k[(s, a_i)] - q_tilde_i_K[(s, a_i)]) for s in S for a_i in A[i])
             times_i.append(k)
@@ -119,7 +124,7 @@ def plot_policy_convergence_to_nash_l1(game: StochasticGame, pi_history: typing.
         l1_distances_i = []
         times_i = []
         V_opt_i = vi_histories[i][-1]
-        for k in range(K):
+        for k in range(0, K, K // PLOT_SPACING):
             pi_k = pi_history[k]
             P_pi = construct_P_pi(i, pi_k[i], pi_opt.minus(i), P, S_list, A)
             r_pi = construct_r_pi(i, pi_k[i], pi_opt.minus(i), R, S_list, A)

@@ -9,7 +9,8 @@ from framework.utils import *
 
 def create_routing_game(
         N: int, M: int, U: int, m: typing.List[numbers.Number] = None, b: typing.List[numbers.Number] = None,
-        lambda_1: float = 0.8, lambda_2: float = 0.2, delta: float = 0.5
+        lambda_1: float = 0.8, lambda_2: float = 0.2, delta: float = 0.5,
+        common_interest: bool = False, strategy_independent_transitions: bool = False
 ):
     random.seed(100)
 
@@ -35,16 +36,19 @@ def create_routing_game(
     if b is None:
         b = [random.randint(L_reward_intercept, U_reward_intercept) for _ in range(M)]
 
-    print("m_j:", m)
-    print("b_j:", b)
-
-    def reward(i, s, a):
+    def reward_oneplayer(i, s, a):
         route = a[i].value
         status = s.value[route]
         multiplier = 1.0 if status == UNSAFE_STATUS else 2.0
         return b[route] - multiplier * m[route] * sum(indicator(a[j].value == route) for j in I)
 
-    def transition_kernel(s, a, s_prime):
+    def reward(i, s, a):
+        if common_interest:
+            return sum(reward_oneplayer(i_prime, s, a) for i_prime in I)
+        else:
+            return reward_oneplayer(i, s, a)
+
+    def strategy_dependent_transition_kernel(s, a, s_prime):
         pr = 1.0
         counts_a = {route: sum(indicator(a[i].value == route) for i in I) for route in range(M)}
         for route in range(M):
@@ -59,6 +63,19 @@ def create_routing_game(
             elif a_status == UNSAFE_STATUS and s_prime_status == UNSAFE_STATUS:
                 pr *= 1 - lambda_2
         return pr
+
+    if strategy_independent_transitions:
+        transition_matrix = {s: {s_prime: sum(strategy_dependent_transition_kernel(s, a, s_prime) for a in A) for s_prime in S} for s in S}
+        for s in S:
+            normalization = sum(transition_matrix[s][s_prime] for s_prime in S)
+            for s_prime in S:
+                transition_matrix[s][s_prime] /= normalization
+
+        def transition_kernel(s, a, s_prime):
+            return transition_matrix[s][s_prime]
+
+    else:
+        transition_kernel = strategy_dependent_transition_kernel
 
     mu = InitialStateDistribution(S, lambda s: 1 / len(S))
     P = ProbabilityTransitionKernel(S, A, transition_kernel)
