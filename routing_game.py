@@ -8,11 +8,15 @@ from framework.utils import *
 
 
 def create_routing_game(
-        N: int, M: int, U: int, m: typing.List[numbers.Number] = None, b: typing.List[numbers.Number] = None,
+        N: int, M: int, U: int, m: typing.List[numbers.Number], b: typing.List[numbers.Number],
         lambda_1: float = 0.8, lambda_2: float = 0.2, delta: float = 0.5,
-        common_interest: bool = False, strategy_independent_transitions: bool = False
+        common_interest: bool = False, strategy_independent_transitions: bool = False,
+        seed: int = 0
 ):
-    random.seed(100)
+    if seed:
+        random.seed(seed)
+    else:
+        random.seed(100)
 
     assert N >= 1
     assert M >= 1
@@ -22,19 +26,10 @@ def create_routing_game(
     UNSAFE_STATUS = 1
     STATUSES = (SAFE_STATUS, UNSAFE_STATUS)
 
-    L_reward_slope = 1
-    U_reward_slope = 5
-    L_reward_intercept = 5
-    U_reward_intercept = 20
-
     players = [Player(idx=i, label=str(i + 1)) for i in range(N)]
     I = PlayerSet(players)
     S = StateSet([State(value=a) for a in itertools.product(STATUSES, repeat=M)])
     A = ActionProfileSet([ActionSet(i, [Action(i, value=j) for j in range(M)]) for i in I])
-    if m is None:
-        m = [random.randint(L_reward_slope, U_reward_slope) for _ in range(M)]
-    if b is None:
-        b = [random.randint(L_reward_intercept, U_reward_intercept) for _ in range(M)]
 
     def reward_oneplayer(i, s, a):
         route = a[i].value
@@ -81,4 +76,4 @@ def create_routing_game(
     P = ProbabilityTransitionKernel(S, A, transition_kernel)
     R = RewardFunction(I, S, A, reward)
     game = StochasticGame(I, S, A, mu, P, R, delta)
-    return game, m, b
+    return game
