@@ -108,7 +108,7 @@ def reproduce_figure_4():
     lambda_2 = 0.2
     delta = 0.5
     K = int(1e5)
-    tau = 1e-3
+    tau = 1e-6
     alpha_r = 0.5
     beta_r = 1
     common_interest = True
